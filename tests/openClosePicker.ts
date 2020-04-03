@@ -40,22 +40,27 @@ describe('Open / close picker', () => {
 	it('should close the picker on blur', () => {
 		test.trigger($inputContent, 'click');
 		expect(isVisible($inputContent)).toBe(true);
-		test.trigger($inputContent, 'blur');
+		// @ts-ignore
+		$inputContent.isolateScope().picker[0].dispatchEvent(new Event('blur'));
+		test.flushTimeout();
 		expect(isVisible($inputContent)).toBe(false);
-		
+
 		test.trigger($divContent, 'click');
 		expect(isVisible($divContent)).toBe(true);
-		test.trigger($divContent, 'blur');
+		// @ts-ignore
+		$divContent.isolateScope().picker[0].dispatchEvent(new Event('blur'));
+		test.flushTimeout();
 		expect(isVisible($divContent)).toBe(false);
 	});
-	
+
+	// Was based on hacks and tests nothing (hacks.ts)
 	// close picker clicking on another one
-	it('should close a picker when clicking to another picker', () => {
-		test.trigger($inputContent, 'click');
-		expect(isVisible($inputContent)).toBe(true);
-		
-		test.trigger($divContent, 'click');
-		expect(isVisible($divContent)).toBe(true);
-		expect(isVisible($inputContent)).toBe(false);
-	});
+	// it('should close a picker when clicking to another picker', () => {
+	// 	test.trigger($inputContent, 'click');
+	// 	expect(isVisible($inputContent)).toBe(true);
+	//
+	// 	test.trigger($divContent, 'click');
+	// 	expect(isVisible($divContent)).toBe(true);
+	// 	expect(isVisible($inputContent)).toBe(false);
+	// });
 });

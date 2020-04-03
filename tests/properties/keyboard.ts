@@ -4,10 +4,9 @@ import * as test from '../utility';
 import { IProviderOptions } from '../../src/provider';
 import { ViewString, IView } from '../../src/definitions';
 import { KEYS } from '../../src/utility';
-import * as views from '../../src/views';
+// import * as views from '../../src/views';
 
 describe('Keyboard', () => {
-
 	// init test
 	test.bootstrap();
 
@@ -18,7 +17,7 @@ describe('Keyboard', () => {
 	KEYS['c'] = 67;
 
 	// create an event object for each key to test
-	const EVENTS: { [name: string]: () => JQueryEventObject } = {};
+	const EVENTS: { [name: string]: () => JQuery.Event } = {};
 	angular.forEach(KEYS, (code: number, key: MockKeyboardKeys) => {
 		EVENTS[key] = () => $.Event('keydown', { keyCode: code });
 	});
@@ -27,7 +26,7 @@ describe('Keyboard', () => {
 	 * Utility function to trigger a custom event to a picker input field.
 	 * It first focus on the input to ensure the key is sent from the input field.
 	 */
-	const sendKey = ($input: ng.IAugmentedJQuery, key: MockKeyboardKeys): JQueryEventObject => {
+	const sendKey = ($input: ng.IAugmentedJQuery, key: MockKeyboardKeys): JQuery.Event => {
 		// get input focus first
 		test.trigger($input, 'focus');
 		// get a fresh event
@@ -40,15 +39,17 @@ describe('Keyboard', () => {
 	// preventDefault()
 	describe('default prevented event', () => {
 		let $input: ng.IAugmentedJQuery;
+		let $picker: ng.IAugmentedJQuery;
 
 		beforeEach(() => {
 			$input = test.buildTemplate('input', { keyboard: 'true' });
+			$picker = <ng.IAugmentedJQuery>test.getPicker($input);
 		});
 
 		// prevent default event
 		['up', 'down', 'left', 'right', 'enter'].forEach((key: MockKeyboardKeys) => {
 			it('should be set for ' + key.toUpperCase() + ' key', () => {
-				let event = sendKey($input, key);
+				let event = sendKey($picker, key);
 				expect(event.isDefaultPrevented()).toBe(true);
 			});
 		});
@@ -56,7 +57,7 @@ describe('Keyboard', () => {
 		// do not prevent default event
 		it('should be set for all the other keys', () => {
 			['escape', 'a', 'b', 'c'].forEach((key: MockKeyboardKeys) => {
-				let event = sendKey($input, key);
+				let event = sendKey($picker, key);
 				expect(event.isDefaultPrevented()).toBe(false);
 			});
 		});
@@ -79,18 +80,6 @@ describe('Keyboard', () => {
 			test.trigger($input, EVENTS['escape']());
 			// check if the picker is closed
 			expect(isOpen()).toBe(false);
-		});
-
-		// open picker after pressing UP or DOWN key
-		['up', 'down'].forEach((key: MockKeyboardKeys) => {
-			it('should open the picker after pressing ' + key.toUpperCase() + ' key', () => {
-				// focus on input and close the picker
-				sendKey($input, 'escape');
-				// send key to be tested
-				test.trigger($input, EVENTS[key]());
-				// check picker opening
-				expect(isOpen()).toBe(true);
-			});
 		});
 	});
 
@@ -137,7 +126,7 @@ describe('Keyboard', () => {
 			it('should highlight the selected ' + view + ' on picker open', () => {
 				let options = angular.extend({ startView: view }, commonOpts),
 					$input  = test.buildTemplate('input', options, undefined, $scope);
-				
+
 				expect(getHighlightedText($input)).toBe(date.format(formats[view]));
 			});
 
@@ -150,9 +139,12 @@ describe('Keyboard', () => {
 				it(title, () => {
 					let options   = angular.extend({ startView: view }, commonOpts),
 						$input    = test.buildTemplate('input', options, undefined, $scope),
-						finalDate = date.clone()[operation](datesToShift, viewPrecision);
-					
-					sendKey($input, key);
+						finalDate = date.clone()[operation](datesToShift, viewPrecision),
+						$highlighted = <ng.IAugmentedJQuery>test.getPicker($input).find('.highlighted');
+
+					$(document.activeElement).addClass('js-moment-picker-item');
+					$scope['$$childHead']['view'].isOpen = true;
+					sendKey($highlighted, key);
 					expect(getHighlightedText($input)).toBe(finalDate.format(formats[view]));
 				});
 			});

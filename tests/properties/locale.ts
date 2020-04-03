@@ -24,13 +24,13 @@ describe('Property `locale`', () => {
 				day:    {},
 				hour:   {}
 			};
-		
+
 		// build expected headers
 		['en', 'it', 'fr', 'bn'].forEach((locale: string) => {
 			let localeDate    = startDate.clone().locale(locale);
 			const getWeekDays = () => moment.weekdays().map((day: string, i: number) => localeDate.clone().startOf('week').add(i, 'day').format('dd'));
-			
-			expectedHeaders.month[locale] = [localeDate.format('MMMM YYYY')].concat(getWeekDays()).join(stringDivider);
+
+			expectedHeaders.month[locale] = [localeDate.format('MMM YYYY')].concat(getWeekDays()).join(stringDivider);
 			expectedHeaders.day  [locale] = localeDate.format('LL');
 			expectedHeaders.hour [locale] = localeDate.startOf('hour').format('lll');
 		});
@@ -39,12 +39,12 @@ describe('Property `locale`', () => {
 			.map((e: Node) => e.textContent)
 			.filter((s: string) => s != '←' && s != '→')
 			.join(stringDivider);
-		
+
 		it('should change locale dinamically', () => {
 			angular.forEach(expectedHeaders, (header, view: string) => {
 				let $scope = $rootScope.$new(),
 					$input = test.buildTemplate('input', { locale: '\{\{locale\}\}', format: format, startView: view, startDate: startDate }, undefined, $scope);
-				
+
 				angular.forEach(header, (expectedHeader: string, locale: string) => {
 					$scope['locale'] = locale;
 					$scope.$apply();

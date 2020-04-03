@@ -3,7 +3,6 @@
 let fs = require('fs');
 let path = require('path');
 let pkg = require('./package');
-let bower = require('./bower');
 let semver = require('semver');
 let webpack = require('webpack');
 let autoprefixer = require('autoprefixer');
@@ -15,9 +14,7 @@ let filesuffix = (isProduction ? '.min' : '');
 let filename = 'angular-moment-picker' + filesuffix;
 let increase = (process.argv.filter(argv => argv.match(/^increase=.+$/))[0] || '').replace('increase=', '');
 
-// sync bower.json with package.json
 pkg.version = increase ? semver.inc(pkg.version, increase) : pkg.version;
-['name', 'version', 'description', 'homepage', 'license', 'keywords', 'dependencies'].forEach(field => bower[field] = pkg[field]);
 
 // themes - read file from `src/themes` folder
 let themes = [];
@@ -63,8 +60,7 @@ module.exports = {
 	plugins: [
 		extractBaseTheme,
 		...extractOtherThemes.map(theme => theme.extract),
-		new webpack.BannerPlugin('Angular Moment Picker - v' + pkg.version + ' - ' + pkg.homepage + ' - (c) 2015 Indri Muska - ' + pkg.license),
-		new generateJsonPlugin('../bower.json', bower, undefined, 2),
+		new webpack.BannerPlugin('Angular Moment Picker - v' + pkg.version + ' - ' + pkg.homepage),
 		new generateJsonPlugin('../package.json', pkg, undefined, 2)
 	]
 };

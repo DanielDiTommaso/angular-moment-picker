@@ -33,7 +33,7 @@ export const buildTemplate = (tag: string, options?: any, content?: any, $scope?
 	if (!options) options = {};
 	if (!options.momentPicker) options.momentPicker = 'mpTestFormattedString';
 	if (tag === 'input' && !options.ngModel) options.ngModel = 'mpTestMomentObject';
-	angular.forEach(options, (value, name) => {
+	angular.forEach(options, (value, name: string) => {
 		let valueStr = name;
 		if (typeof value === 'string') valueStr = value;
 		else $scope[name] = value;
@@ -60,8 +60,12 @@ export const buildTemplate = (tag: string, options?: any, content?: any, $scope?
 export const getPicker = (element: ng.IAugmentedJQuery) => (<IDirectiveScopeInternal>element.isolateScope()).picker;
 
 // wrap jquery trigger fn: event trigger + digest stimulation
-export const trigger = (element: ng.IAugmentedJQuery, event: string | JQueryEventObject) => {
+export const trigger = (element: ng.IAugmentedJQuery, event: string | JQuery.Event) => {
 	// use jquey trigger method to propagate event to parent nodes
 	angular.element(element).trigger(<string>event);
 	$digest();
+};
+
+export const flushTimeout = () => {
+	return $timeout.flush();
 };
