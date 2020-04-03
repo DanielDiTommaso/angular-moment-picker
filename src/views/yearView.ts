@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import { IView, IViewItem, IDirectiveScopeInternal, IModelController } from '../definitions';
 import { IProviderOptions } from '../provider';
 import { isValidMoment } from '../utility';
+import {isSelectable} from '../core.service';
 
 class YearView implements IView {
 	public perLine: number = 4;
@@ -12,14 +13,14 @@ class YearView implements IView {
 		private $ctrl: IModelController,
 		private provider: IProviderOptions) { }
 
-	public render(): string {
+	public render(elRef): string {
 		let month = this.$scope.view.moment.clone().startOf('year'),
 			months = moment.monthsShort();
 
 		this.rows = [];
 		months.forEach((label, i) => {
 			let index = Math.floor(i / this.perLine),
-				selectable = this.$scope.limits.isSelectable(month, 'month');
+				selectable = isSelectable.apply(this.$scope, [month, elRef, 'month']);
 
 			if (!this.rows[index]) this.rows[index] = [];
 			this.rows[index].push(<IViewItem>{

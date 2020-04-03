@@ -63,7 +63,7 @@ export interface IView {
 	perLine: number;
 	headers?: string[];
 	rows: IViewItem[][];
-	render(): string; // return view title
+	render(elRef): string; // return view title
 	set(value: IViewItem): void;
 	highlightClosest?(): void;
 }
@@ -97,10 +97,6 @@ export interface IDirectiveScopeInternal extends IDirectiveScope, IProviderOptio
 	limits: {
 		minDate: moment.Moment;
 		maxDate: moment.Moment;
-		isAfterOrEqualMin: (value: moment.Moment, precision?: moment.unitOfTime.StartOf) => boolean;
-		isBeforeOrEqualMax: (value: moment.Moment, precision?: moment.unitOfTime.StartOf) => boolean;
-		isSelectable: (value: moment.Moment, precision?: moment.unitOfTime.StartOf) => boolean;
-		checkView: () => void;
 	};
 
 	// views

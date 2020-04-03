@@ -1,6 +1,7 @@
 import { IView, IViewItem, IDirectiveScopeInternal, IModelController } from '../definitions';
 import { IProviderOptions } from '../provider';
 import { isValidMoment } from '../utility';
+import {isSelectable} from '../core.service';
 
 export default class DayView implements IView {
 	public perLine: number = 4;
@@ -11,13 +12,13 @@ export default class DayView implements IView {
 		private $ctrl: IModelController,
 		private provider: IProviderOptions) { }
 
-	public render(): string {
+	public render(elRef): string {
 		let hour = this.$scope.view.moment.clone().startOf('day').hour(this.provider.hoursStart);
 
 		this.rows = [];
 		for (let h = 0; h <= this.provider.hoursEnd - this.provider.hoursStart; h++) {
 			let index = Math.floor(h / this.perLine),
-				selectable = this.$scope.limits.isSelectable(hour, 'hour');
+				selectable = isSelectable.apply(this.$scope, [hour, elRef, 'hour']);
 
 			if (!this.rows[index]) this.rows[index] = [];
 			this.rows[index].push({

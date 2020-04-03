@@ -3,7 +3,7 @@ import {IView, ViewString} from './definitions';
 import * as moment from 'moment';
 import {all, precisions} from './constants';
 import * as $ from 'jquery';
-import {isUndefined, forEach} from 'lodash';
+import {isUndefined, forEach, isFunction} from 'lodash';
 import {getOffset} from './helpers';
 
 /* tslint:disable */
@@ -261,6 +261,42 @@ export function checkValue(modelValue, callback) {
 }
 
 export function selectValidValue(modelValue, callback) {
-        if (!this.limits.isAfterOrEqualMin(modelValue)) setValue(this.limits.minDate, callback);
-        if (!this.limits.isBeforeOrEqualMax(modelValue)) setValue(this.limits.maxDate, callback);
+        if (!isAfterOrEqualMin.apply(this, modelValue)) setValue(this.limits.minDate, callback);
+        if (!isBeforeOrEqualMax.apply(this, modelValue)) setValue(this.limits.maxDate, callback);
 }
+
+export function checkView() {
+        if (isUndefined(this.view.moment)) this.view.moment = moment().locale(this.locale);
+        if (!isAfterOrEqualMin.apply(this, this.view.moment)) this.view.moment = this.limits.minDate.clone();
+        if (!isBeforeOrEqualMax.apply(this, this.view.moment)) this.view.moment = this.limits.maxDate.clone();
+        this.view.update();
+        this.view.render();
+}
+
+export function isSelectable(value: moment.Moment, elRef, precision?: moment.unitOfTime.StartOf) {
+    let selectable: boolean = true;
+    let retVal;
+
+    try {
+        if (isFunction(this.selectable) && attributeSelector(elRef, 'selectable')) selectable = this.selectable({ date: value, type: precision });
+    } finally {
+        retVal = isAfterOrEqualMin.apply(this, [value, precision]) && isBeforeOrEqualMax.apply(this, [value, precision]) && selectable;
+    }
+    return retVal;
+}
+
+export function attributeSelector(elRef, attribute: string): string {
+    return elRef.attr(attribute);
+    // let domAttr = document.getElementsByClassName('moment-picker')[0].previousElementSibling.attributes[attribute]
+    //
+    // return domAttr.value;
+}
+
+export function isBeforeOrEqualMax(value: moment.Moment, precision?: moment.unitOfTime.StartOf) {
+    return isUndefined(this.limits.maxDate) || value.isBefore(this.limits.maxDate, precision) || value.isSame(this.limits.maxDate, precision);
+}
+
+export function isAfterOrEqualMin(value: moment.Moment, precision?: moment.unitOfTime.StartOf) {
+    return isUndefined(this.limits.minDate) || value.isAfter(this.limits.minDate, precision) || value.isSame(this.limits.minDate, precision);
+}
+

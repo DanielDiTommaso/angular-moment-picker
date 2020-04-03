@@ -3,6 +3,7 @@ import * as moment from 'moment';
 import { IView, IViewItem, IDirectiveScopeInternal, IModelController } from '../definitions';
 import { IProviderOptions } from '../provider';
 import { isValidMoment } from '../utility';
+import {isSelectable} from '../core.service';
 
 export default class MonthView implements IView {
 	public perLine: number = moment.weekdays().length;
@@ -14,7 +15,7 @@ export default class MonthView implements IView {
 		private $ctrl: IModelController,
 		private provider: IProviderOptions) { }
 
-	public render(): string {
+	public render(elRef): string {
 		let month: number                         = this.$scope.view.moment.month(),
 			day: moment.Moment                    = this.$scope.view.moment.clone().startOf('month').startOf('week').hour(12),
 			rows: { [week: number]: IViewItem[] } = {},
@@ -24,7 +25,7 @@ export default class MonthView implements IView {
 		this.rows = [];
 		for (let week = firstWeek; week <= lastWeek; week++)
 			rows[week] = Array.apply(null, Array(this.perLine)).map(() => {
-				let selectable = this.$scope.limits.isSelectable(day, 'day');
+				let selectable = isSelectable.apply(this.$scope, [day, elRef, 'day']);
 				let date = <IViewItem>{
 					index: day.date(),
 					label: day.format(this.provider.daysFormat),

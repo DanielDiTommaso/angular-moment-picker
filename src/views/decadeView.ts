@@ -1,6 +1,7 @@
 import { IView, IViewItem, IDirectiveScopeInternal, IModelController } from '../definitions';
 import { IProviderOptions } from '../provider';
 import { isValidMoment } from '../utility';
+import {isSelectable} from '../core.service';
 
 export default class DecadeView implements IView {
 	public perLine: number = 4;
@@ -10,8 +11,8 @@ export default class DecadeView implements IView {
 		private $scope: IDirectiveScopeInternal,
 		private $ctrl: IModelController,
 		private provider: IProviderOptions) { }
-	
-	public render(): string {
+
+	public render(elRef): string {
 		let year = this.$scope.view.moment.clone(),
 			firstYear = Math.floor(year.year() / 10) * 10 - 1;
 
@@ -19,7 +20,7 @@ export default class DecadeView implements IView {
 		year.year(firstYear);
 		for (let y = 0; y < 12; y++) {
 			let index = Math.floor(y / this.perLine),
-				selectable = this.$scope.limits.isSelectable(year, 'year');
+				selectable = isSelectable.apply(this.$scope, [year, elRef, 'year']);
 
 			if (!this.rows[index]) this.rows[index] = [];
 			this.rows[index].push(<IViewItem>{

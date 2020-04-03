@@ -6,11 +6,11 @@ import { DecadeView, YearView, MonthView, DayView, HourView, MinuteView } from '
 import { isValidMoment, toValue, toMoment, momentToValue, valueToMoment, setValue, updateMoment, defaultGetToday } from './utility';
 import {
 	addAriaLabelsForButtons,
-	checkFocusableElements, checkValue, detectMinMax,
+	checkFocusableElements, checkValue, checkView, detectMinMax,
 	focusCurrentlyHighlighted,
 	getMomentNext,
 	getMomentPrevious,
-	handleElementToOpenCalendar, keydownHandler, position, selectValidValue
+	handleElementToOpenCalendar, isAfterOrEqualMin, isBeforeOrEqualMax, keydownHandler, position, selectValidValue
 } from './core.service';
 import {all, formats} from './constants';
 
@@ -130,30 +130,7 @@ export default class Directive {
 			// limits
 			$scope.limits = {
 				minDate: toMoment($scope.minDate, $scope.format, $scope.locale),
-				maxDate: toMoment($scope.maxDate, $scope.format, $scope.locale),
-				isAfterOrEqualMin: (value: moment.Moment, precision?: moment.unitOfTime.StartOf) => {
-					return isUndefined($scope.limits.minDate) || value.isAfter($scope.limits.minDate, precision) || value.isSame($scope.limits.minDate, precision);
-				},
-				isBeforeOrEqualMax: (value: moment.Moment, precision?: moment.unitOfTime.StartOf) => {
-					return isUndefined($scope.limits.maxDate) || value.isBefore($scope.limits.maxDate, precision) || value.isSame($scope.limits.maxDate, precision);
-				},
-				isSelectable: (value: moment.Moment, precision?: moment.unitOfTime.StartOf) => {
-					let selectable: boolean = true;
-					let retVal;
-					try {
-						if (isFunction($scope.selectable) && $attrs['selectable']) selectable = $scope.selectable({ date: value, type: precision });
-					} finally {
-						retVal = $scope.limits.isAfterOrEqualMin(value, precision) && $scope.limits.isBeforeOrEqualMax(value, precision) && selectable;
-					}
-					return retVal;
-				},
-				checkView: () => {
-					if (isUndefined($scope.view.moment)) $scope.view.moment = moment().locale($scope.locale);
-					if (!$scope.limits.isAfterOrEqualMin($scope.view.moment)) $scope.view.moment = $scope.limits.minDate.clone();
-					if (!$scope.limits.isBeforeOrEqualMax($scope.view.moment)) $scope.view.moment = $scope.limits.maxDate.clone();
-					$scope.view.update();
-					$scope.view.render();
-				}
+				maxDate: toMoment($scope.maxDate, $scope.format, $scope.locale)
 			};
 
 			$scope.views = {
@@ -236,11 +213,11 @@ export default class Directive {
 					let momentPrevious = getMomentPrevious($scope.view.selected, $scope.view.moment, $scope.view.precision, $scope.view.unit),
 						momentNext = getMomentNext($scope.view.selected, $scope.view.moment, $scope.view.precision, $scope.view.unit);
 
-					$scope.view.previous.selectable = $scope.limits.isAfterOrEqualMin(momentPrevious, $scope.view.precision());
+					$scope.view.previous.selectable = isAfterOrEqualMin.apply($scope, [momentPrevious, $scope.view.precision()]);
 					$scope.view.previous.label = $scope.view.previous.selectable ? $scope.leftArrow : '&nbsp;';
-					$scope.view.next.selectable = $scope.limits.isBeforeOrEqualMax(momentNext, $scope.view.precision());
+					$scope.view.next.selectable = isBeforeOrEqualMax.apply($scope, [momentNext, $scope.view.precision()]);
 					$scope.view.next.label = $scope.view.next.selectable ? $scope.rightArrow : '&nbsp;';
-					$scope.view.title = $scope.views[$scope.view.selected].render();
+					$scope.view.title = $scope.views[$scope.view.selected].render($element);
 				},
 				change: (view) => {
 					let nextView = all.indexOf(view),
@@ -284,7 +261,7 @@ export default class Directive {
 
 			// initialization
 			detectMinMax.apply($scope);
-			$scope.limits.checkView();
+			checkView.apply($scope);
 			// model controller is initialized after linking function
 			setTimeout(() => {
 				if ($attrs['ngModel']) {
@@ -306,8 +283,8 @@ export default class Directive {
 				$ctrl.$parsers.push((viewValue) => updateMoment.apply($scope, [$ctrl.$modelValue, valueToMoment.apply($scope, [viewValue])]) || true);
 				$ctrl.$formatters.push((modelValue) => momentToValue(modelValue, $scope.format) || '');
 				$ctrl.$viewChangeListeners.push(() => { if ($attrs['ngModel'] != $attrs['momentPicker']) $scope.value = $ctrl.$viewValue; });
-				$ctrl.$validators.minDate = (value) => $scope.validate || !isValidMoment(value) || $scope.limits.isAfterOrEqualMin(value);
-				$ctrl.$validators.maxDate = (value) => $scope.validate || !isValidMoment(value) || $scope.limits.isBeforeOrEqualMax(value);
+				$ctrl.$validators.minDate = (value) => $scope.validate || !isValidMoment(value) || isAfterOrEqualMin.apply($scope, value);
+				$ctrl.$validators.maxDate = (value) => $scope.validate || !isValidMoment(value) || isBeforeOrEqualMax.apply($scope, value);
 			}
 
 			// properties listeners
@@ -361,7 +338,7 @@ export default class Directive {
 					$scope.limits[field] = toMoment($scope[field], $scope.format, $scope.locale);
 				});
 				checkValue.apply($scope, [$ctrl.$modelValue, setValueCallback]);
-				$scope.limits.checkView();
+				checkView.apply($scope);
 				$scope.view.render();
 			});
 			$scope.$watch(() => toValue($scope.startDate, $scope.format, $scope.locale), (newViewValue, oldViewValue) => {

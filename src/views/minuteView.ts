@@ -2,6 +2,7 @@ import {forEach} from 'lodash';
 import { IView, IViewItem, IDirectiveScopeInternal, IModelController } from '../definitions';
 import { IProviderOptions } from '../provider';
 import { isValidMoment } from '../utility';
+import {isSelectable} from '../core.service';
 
 export default class MinuteView implements IView {
 	public perLine: number = 6;
@@ -12,14 +13,14 @@ export default class MinuteView implements IView {
 		private $ctrl: IModelController,
 		private provider: IProviderOptions) { }
 
-	public render(): string {
+	public render(elRef): string {
 		let i = 0,
 			second = this.$scope.view.moment.clone().startOf('minute').second(this.provider.secondsStart);
 
 		this.rows = [];
 		for (let s = 0; s <= this.provider.secondsEnd - this.provider.secondsStart; s += this.provider.secondsStep) {
 			let index = Math.floor(i / this.perLine),
-				selectable = this.$scope.limits.isSelectable(second, 'second');
+				selectable = isSelectable.apply(this.$scope, [second, elRef, 'second']);
 
 			if (!this.rows[index]) this.rows[index] = [];
 			this.rows[index].push(<IViewItem>{

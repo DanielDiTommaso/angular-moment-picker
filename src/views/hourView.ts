@@ -3,6 +3,7 @@ import * as moment from 'moment';
 import { IView, IViewItem, IDirectiveScopeInternal, IModelController } from '../definitions';
 import { IProviderOptions } from '../provider';
 import { isValidMoment } from '../utility';
+import {isSelectable} from '../core.service';
 
 export default class HourView implements IView {
 	public perLine: number = 4;
@@ -13,7 +14,7 @@ export default class HourView implements IView {
 		private $ctrl: IModelController,
 		private provider: IProviderOptions) { }
 
-	public render(): string {
+	public render(elRef): string {
 		let i = 0,
 			minute = this.$scope.view.moment.clone().startOf('hour').minute(this.provider.minutesStart),
 			minutesFormat = this.provider.minutesFormat || moment.localeData(this.$scope.locale).longDateFormat('LT').replace(/[aA]/, '').trim();
@@ -21,7 +22,7 @@ export default class HourView implements IView {
 		this.rows = [];
 		for (let m = 0; m <= this.provider.minutesEnd - this.provider.minutesStart; m += this.provider.minutesStep) {
 			let index = Math.floor(i / this.perLine),
-				selectable = this.$scope.limits.isSelectable(minute, 'minute');
+				selectable = isSelectable.apply(this.$scope, [minute, elRef, 'minute']);
 
 			if (!this.rows[index]) this.rows[index] = [];
 			this.rows[index].push(<IViewItem>{
