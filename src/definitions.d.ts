@@ -1,4 +1,3 @@
-import * as angular from 'angular';
 import * as moment from 'moment';
 import { IProviderOptions } from './provider';
 
@@ -32,6 +31,7 @@ export interface IDirectiveScope extends ng.IScope {
 		top?: string;
 		bottom?: string
 	};
+	getToday?: () => Date | moment.Moment;
 	change?: (context: any) => boolean;
 	selectable?: (context: any) => boolean;
 }
@@ -48,6 +48,7 @@ export interface IUtility {
 export interface IViewItem {
 	index: number;
 	label: string;
+	ariaLabel: string;
 	year?: number;
 	month?: number;
 	date?: number;
@@ -61,7 +62,7 @@ export interface IViewItem {
 export interface IView {
 	perLine: number;
 	headers?: string[];
-	rows: { [index: number]: IViewItem[] };
+	rows: IViewItem[][];
 	render(): string; // return view title
 	set(value: IViewItem): void;
 	highlightClosest?(): void;
@@ -74,6 +75,24 @@ export interface IViewHeaderButton {
 }
 
 export interface IDirectiveScopeInternal extends IDirectiveScope, IProviderOptions {
+	ariaUnselectableMessage: string;
+	ariaDefaultNextButtonPeriod: string;
+	ariaDefaultPreviousButtonPeriod: string;
+	ariaDefaultParentButtonTitle: string;
+	ariaNextButtonTitleDecadePeriod: string;
+	ariaPreviousButtonTitleDecadePeriod: string;
+	ariaParentButtonTitleDecadePeriod: string;
+	ariaNextButtonTitleYearPeriod: string;
+	ariaPreviousButtonTitleYearPeriod: string;
+	ariaParentButtonTitleYearPeriod: string;
+	ariaNextButtonTitleMonthPeriod: string;
+	ariaPreviousButtonTitleMonthPeriod: string;
+	ariaParentButtonTitleMonthPeriod: string;
+	onAfterRender: () => void;
+	getToday: () => Date | moment.Moment;
+	focusCurrentlyHighlighted: () => void;
+	elementToFocusOnClose: JQuery<HTMLElement>;
+	elementToOpenCalendar: JQuery<HTMLElement>;
 	// utilities
 	limits: {
 		minDate: moment.Moment;
@@ -81,16 +100,12 @@ export interface IDirectiveScopeInternal extends IDirectiveScope, IProviderOptio
 		isAfterOrEqualMin: (value: moment.Moment, precision?: moment.unitOfTime.StartOf) => boolean;
 		isBeforeOrEqualMax: (value: moment.Moment, precision?: moment.unitOfTime.StartOf) => boolean;
 		isSelectable: (value: moment.Moment, precision?: moment.unitOfTime.StartOf) => boolean;
-		checkValue: () => void;
 		checkView: () => void;
 	};
 
 	// views
 	views: {
-		all: ViewString[];
-		precisions: { [viewString: string]: moment.unitOfTime.StartOf };
 		formats: { [viewString: string]: string };
-		detectMinMax: () => void;
 
 		// specific view controllers
 		decade: IView;
@@ -110,9 +125,7 @@ export interface IDirectiveScopeInternal extends IDirectiveScope, IProviderOptio
 		update: () => void;
 		toggle: () => void;
 		open: () => void;
-		close: () => void;
-		position: () => void;
-		keydown: (e: JQueryEventObject) => void;
+		close: (implicit?: boolean) => void;
 
 		// utility
 		unit: () => number;
@@ -134,9 +147,10 @@ export interface IDirectiveScopeInternal extends IDirectiveScope, IProviderOptio
 	detectedMaxView: ViewString;
 
 	// elements
-	picker: ng.IAugmentedJQuery;
-	container: ng.IAugmentedJQuery;
-	input: ng.IAugmentedJQuery;
+	picker: JQuery<Element>;
+	container: JQuery<HTMLElement>;
+	input: JQuery<HTMLElement>;
+	componentRef: JQuery<HTMLElement>;
 }
 
 export interface IModelValidators extends ng.IModelValidators {

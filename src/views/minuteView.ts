@@ -1,11 +1,11 @@
-import * as angular from 'angular';
+import {forEach} from 'lodash';
 import { IView, IViewItem, IDirectiveScopeInternal, IModelController } from '../definitions';
 import { IProviderOptions } from '../provider';
 import { isValidMoment } from '../utility';
 
 export default class MinuteView implements IView {
 	public perLine: number = 6;
-	public rows: { [index: number]: IViewItem[] } = {};
+	public rows: IViewItem[][] = [];
 
 	constructor(
 		private $scope: IDirectiveScopeInternal,
@@ -16,7 +16,7 @@ export default class MinuteView implements IView {
 		let i = 0,
 			second = this.$scope.view.moment.clone().startOf('minute').second(this.provider.secondsStart);
 
-		this.rows = {};
+		this.rows = [];
 		for (let s = 0; s <= this.provider.secondsEnd - this.provider.secondsStart; s += this.provider.secondsStep) {
 			let index = Math.floor(i / this.perLine),
 				selectable = this.$scope.limits.isSelectable(second, 'second');
@@ -25,6 +25,7 @@ export default class MinuteView implements IView {
 			this.rows[index].push(<IViewItem>{
 				index: second.second(),
 				label: second.format(this.provider.secondsFormat),
+				ariaLabel: second.format(this.$scope.ariaSecondLabelFormat),
 				year: second.year(),
 				month: second.month(),
 				date: second.date(),
@@ -54,8 +55,8 @@ export default class MinuteView implements IView {
 
 	public highlightClosest(): void {
 		let seconds = <IViewItem[]>[], second;
-		angular.forEach(this.rows, (row) => {
-			angular.forEach(row, (value) => {
+		forEach(this.rows, (row) => {
+			forEach(row, (value) => {
 				if (Math.abs(value.second - this.$scope.view.moment.second()) < this.provider.secondsStep) seconds.push(value);
 			});
 		});

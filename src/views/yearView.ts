@@ -5,7 +5,7 @@ import { isValidMoment } from '../utility';
 
 class YearView implements IView {
 	public perLine: number = 4;
-	public rows: { [index: number]: IViewItem[] } = {};
+	public rows: IViewItem[][] = [];
 
 	constructor(
 		private $scope: IDirectiveScopeInternal,
@@ -16,7 +16,7 @@ class YearView implements IView {
 		let month = this.$scope.view.moment.clone().startOf('year'),
 			months = moment.monthsShort();
 
-		this.rows = {};
+		this.rows = [];
 		months.forEach((label, i) => {
 			let index = Math.floor(i / this.perLine),
 				selectable = this.$scope.limits.isSelectable(month, 'month');
@@ -25,6 +25,7 @@ class YearView implements IView {
 			this.rows[index].push(<IViewItem>{
 				index: month.month(),
 				label: month.format(this.provider.monthsFormat),
+				ariaLabel: month.format(this.$scope.ariaMonthLabelFormat),
 				year: month.year(),
 				month: month.month(),
 				class: [

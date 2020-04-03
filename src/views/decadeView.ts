@@ -4,7 +4,7 @@ import { isValidMoment } from '../utility';
 
 export default class DecadeView implements IView {
 	public perLine: number = 4;
-	public rows: { [index: number]: IViewItem[] } = {};
+	public rows: IViewItem[][] = [];
 
 	constructor(
 		private $scope: IDirectiveScopeInternal,
@@ -15,7 +15,7 @@ export default class DecadeView implements IView {
 		let year = this.$scope.view.moment.clone(),
 			firstYear = Math.floor(year.year() / 10) * 10 - 1;
 
-		this.rows = {};
+		this.rows = [];
 		year.year(firstYear);
 		for (let y = 0; y < 12; y++) {
 			let index = Math.floor(y / this.perLine),
@@ -25,6 +25,7 @@ export default class DecadeView implements IView {
 			this.rows[index].push(<IViewItem>{
 				index: year.year(),
 				label: year.format(this.provider.yearsFormat),
+				ariaLabel: year.format(this.$scope.ariaYearLabelFormat),
 				year: year.year(),
 				class: [
 					this.$scope.keyboard && year.isSame(this.$scope.view.moment, 'year') ? 'highlighted' : '',

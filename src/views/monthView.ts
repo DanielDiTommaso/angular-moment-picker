@@ -1,4 +1,4 @@
-import * as angular from 'angular';
+import {forEach} from 'lodash';
 import * as moment from 'moment';
 import { IView, IViewItem, IDirectiveScopeInternal, IModelController } from '../definitions';
 import { IProviderOptions } from '../provider';
@@ -6,7 +6,7 @@ import { isValidMoment } from '../utility';
 
 export default class MonthView implements IView {
 	public perLine: number = moment.weekdays().length;
-	public rows: { [index: number]: IViewItem[] } = [];
+	public rows: IViewItem[][] = [];
 	public headers: string[];
 
 	constructor(
@@ -28,13 +28,15 @@ export default class MonthView implements IView {
 				let date = <IViewItem>{
 					index: day.date(),
 					label: day.format(this.provider.daysFormat),
+					ariaLabel: day.format(this.$scope.ariaDayLabelFormat),
 					year: day.year(),
 					month: day.month(),
 					date: day.date(),
 					class: [
 						this.$scope.keyboard && day.isSame(this.$scope.view.moment, 'day') ? 'highlighted' : '',
-						!!this.$scope.today && day.isSame(new Date(), 'day') ? 'today' : '',
-						!selectable || day.month() != month ? 'disabled' : isValidMoment(this.$ctrl.$modelValue) && day.isSame(this.$ctrl.$modelValue, 'day') ? 'selected' : ''
+						!!this.$scope.today && day.isSame(this.$scope.getToday(), 'day') ? 'today' : '',
+						!selectable  ? 'disabled' : isValidMoment(this.$ctrl.$modelValue) && day.isSame(this.$ctrl.$modelValue, 'day') ? 'selected' : '',
+						day.month() != month ? 'out-of-month' : ''
 					].join(' ').trim(),
 					selectable: selectable
 				};
@@ -42,13 +44,13 @@ export default class MonthView implements IView {
 				return date;
 			});
 		// object to array - see https://github.com/indrimuska/angular-moment-picker/issues/9
-		angular.forEach(rows, (row: IViewItem[]) => (<IViewItem[][]>this.rows).push(row));
+		forEach(rows, (row: IViewItem[]) => (<IViewItem[][]>this.rows).push(row));
 		// render headers
 		this.headers = moment.weekdays().map((d: string, i: number) => moment().locale(this.$scope.locale).startOf('week').add(i, 'day').format('dd'));
 		// return title
-		return this.$scope.view.moment.format('MMMM YYYY');
+		return this.$scope.view.moment.format('MMM YYYY');
 	}
-	
+
 	public set(day: IViewItem): void {
 		if (!day.selectable) return;
 		this.$scope.view.moment.year(day.year).month(day.month).date(day.date);

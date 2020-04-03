@@ -4,7 +4,7 @@ import { isValidMoment } from '../utility';
 
 export default class DayView implements IView {
 	public perLine: number = 4;
-	public rows: { [index: number]: IViewItem[] } = {};
+	public rows: IViewItem[][] = [];
 
 	constructor(
 		private $scope: IDirectiveScopeInternal,
@@ -14,7 +14,7 @@ export default class DayView implements IView {
 	public render(): string {
 		let hour = this.$scope.view.moment.clone().startOf('day').hour(this.provider.hoursStart);
 
-		this.rows = {};
+		this.rows = [];
 		for (let h = 0; h <= this.provider.hoursEnd - this.provider.hoursStart; h++) {
 			let index = Math.floor(h / this.perLine),
 				selectable = this.$scope.limits.isSelectable(hour, 'hour');
@@ -23,6 +23,7 @@ export default class DayView implements IView {
 			this.rows[index].push({
 				index: h, // this is to prevent DST conflicts
 				label: hour.format(this.provider.hoursFormat),
+				ariaLabel: hour.format(this.$scope.ariaHourLabelFormat),
 				year: hour.year(),
 				month: hour.month(),
 				date: hour.date(),

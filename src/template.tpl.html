@@ -1,31 +1,56 @@
-<div class="moment-picker">
-    <div class="moment-picker-container {{view.selected}}-view"
+<div role="dialog" class="moment-picker">
+        <div role="application" aria-label="{{ ariaDialogTitle }}" class="moment-picker-container {{view.selected}}-view"
          ng-class="{'moment-picker-disabled': disabled, open: view.isOpen}">
+        <div class='sr-only js-alert-element-aria' aria-live='polite'></div>
         <div ng-if="additions.top" class="moment-picker-addition top"></div>
-        <table class="header-view" ng-if="showHeader">
+        <table role="presentation" class="header-view" ng-if="showHeader">
             <thead>
                 <tr>
-                    <th ng-class="{disabled: !view.previous.selectable}" ng-bind-html="view.previous.label" ng-click="view.previous.set()"></th>
-                    <th ng-bind="view.title" ng-click="view.setParentView()"></th>
-                    <th ng-class="{disabled: !view.next.selectable}" ng-bind-html="view.next.label" ng-click="view.next.set()"></th>
+                    <th tabindex="0"
+                        class="js-moment-picker-previous"
+                        role="button"
+                        aria-label="{{ ariaPreviousButtonTitle }}"
+                        ng-class="{disabled: !view.previous.selectable}"
+                        ng-click="view.previous.set()"
+                        ng-bind-html="view.previous.label"></th>
+                    <th tabindex="0"
+                        role="button"
+                        aria-label="{{ view.title }} {{ ariaParentButtonTitle }}"
+                        class="js-moment-picker-parent-view"
+                        ng-click="view.setParentView()"
+                        ng-bind="view.title"></th>
+                    <th tabindex="0"
+                        class="js-moment-picker-next"
+                        role="button"
+                        aria-label="{{ ariaNextButtonTitle }}"
+                        ng-class="{disabled: !view.next.selectable}"
+                        ng-bind-html="view.next.label"
+                        ng-click="view.next.set()"></th>
                 </tr>
             </thead>
         </table>
         <div class="moment-picker-specific-views">
-            <table>
+            <table role="presentation">
                 <thead ng-if="views[view.selected].headers">
                     <tr>
                         <th ng-repeat="header in views[view.selected].headers" ng-bind="header"></th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr ng-repeat="row in views[view.selected].rows">
-                        <td ng-repeat="item in row track by item.index" ng-class="item.class" ng-bind="item.label"
-                            ng-click="!disabled && views[view.selected].set(item)"></td>
+                <tbody class="js-moment-picker-calendar-body">
+                    <tr ng-repeat="row in views[view.selected].rows track by $index">
+                        <td tabindex="{{ item.class.indexOf('highlighted') === -1 ? -1 : 0 }}"
+                            aria-label="{{ item.ariaLabel }}"
+                            role="button"
+                            class="js-moment-picker-item"
+                            ng-repeat="item in row track by $index"
+                            ng-class="item.class"
+                            ng-click="!disabled && views[view.selected].set(item)"
+                            ng-bind="item.label"></td>
                     </tr>
                 </tbody>
             </table>
         </div>
         <div ng-if="additions.bottom" class="moment-picker-addition bottom"></div>
     </div>
+    {{ onAfterRender() }}
 </div>

@@ -1,8 +1,9 @@
-import * as angular from 'angular';
+import {forEach} from 'lodash';
 import * as moment from 'moment';
-import { Value, IDirectiveScopeInternal, IModelController, ViewString } from './definitions';
+import { Value, ViewString } from './definitions';
+import {all, precisions} from './constants';
 
-export const KEYS = { up: 38, down: 40, left: 37, right: 39, escape: 27, enter: 13 };
+export const KEYS = { up: 38, down: 40, left: 37, right: 39, escape: 27, enter: 13, tab: 9, space: 32 };
 
 export const isValidMoment = (value: moment.Moment | Value): boolean => {
 	return moment.isMoment(value) && value.isValid();
@@ -25,45 +26,44 @@ export const momentToValue = (momentObject: moment.Moment, format: string): Valu
 	return !format ? momentObject.valueOf() : momentObject.format(format);
 };
 
-export const valueToMoment = (formattedValue: Value, $scope: IDirectiveScopeInternal): moment.Moment => {
+export const valueToMoment = (formattedValue: Value): moment.Moment => {
 	let momentValue: moment.Moment;
 	if (!formattedValue) return momentValue;
-	if (!$scope.format) momentValue = moment(formattedValue);
-	else momentValue = moment(formattedValue, $scope.format, $scope.locale);
-	if ($scope.model) {
+	if (!this.format) momentValue = moment(formattedValue);
+	else momentValue = moment(formattedValue, this.format, this.locale);
+	if (this.model) {
 		// set value for each view precision (from Decade View to minView)
-		const views = $scope.views.all.slice(0, $scope.views.all.indexOf($scope.detectedMinView));
-		angular.forEach(views, (view: ViewString) => {
-			const precision = $scope.views.precisions[view];
-			momentValue[precision]($scope.model[precision]());
+		const views = all.slice(0, all.indexOf(this.detectedMinView));
+		forEach(views, (view: ViewString) => {
+			const precision = precisions[view];
+			momentValue[precision](this.model[precision]());
 		});
 	}
 	return momentValue;
 };
 
-export const setValue = (value: moment.Moment | Value, $scope: IDirectiveScopeInternal, $ctrl: IModelController, $attrs: ng.IAttributes): void => {
-	let modelValue = isValidMoment(value) ? (<moment.Moment>value).clone() : valueToMoment(<Value>value, $scope),
-		viewValue = momentToValue(modelValue, $scope.format);
-	$scope.model = updateMoment($scope.model, modelValue, $scope);
-	$ctrl.$modelValue = updateMoment($ctrl.$modelValue, modelValue, $scope);
-	if ($attrs['ngModel'] != $attrs['momentPicker']) $scope.value = viewValue;
-	if ($attrs['ngModel']) {
-		$ctrl.$setViewValue(viewValue);
-		$ctrl.$render(); // render input value
-	}
+export const setValue = (value: moment.Moment | Value, callback): void => {
+	let modelValue = isValidMoment(value) ? (<moment.Moment>value).clone() : valueToMoment.apply(this, [<Value>value]),
+		viewValue = momentToValue(modelValue, this.format);
+	this.model = updateMoment(this.model, modelValue);
+	callback(viewValue, modelValue);
 };
 
-export const updateMoment = (model: moment.Moment, value: moment.Moment, $scope: IDirectiveScopeInternal): moment.Moment => {
+export const updateMoment = (model: moment.Moment, value: moment.Moment): moment.Moment => {
 	if (!isValidMoment(model) || !value) model = value;
 	else {
 		if (!model.isSame(value)) {
 			// set value for each view precision (from Decade View to maxView)
-			const views = $scope.views.all.slice(0, $scope.views.all.indexOf($scope.detectedMaxView) + 1);
-			angular.forEach(views, (view: ViewString) => {
-				const precision = $scope.views.precisions[view];
+			const views = all.slice(0, all.indexOf(this.detectedMaxView) + 1);
+			forEach(views, (view: ViewString) => {
+				const precision = precisions[view];
 				model[precision](value[precision]());
 			});
 		}
 	}
 	return model;
+};
+
+export const defaultGetToday = (): Date => {
+	return new Date();
 };
